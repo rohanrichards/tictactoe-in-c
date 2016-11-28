@@ -1,49 +1,107 @@
+/***********************************************************************
+* CPT220 - Programming in C
+* Study Period 4 2015 Assignment #1 
+* Full Name        : Rohan M Richards
+* Student Number   : s3550153
+* Start up code provided by Paul Miller
+***********************************************************************/
+
 #include "menu.h"
 
-/**
- * @file menu.c contains the function implementations for managing the menu
- * system
- **/
+/*
+ * menu.c just handles the main menu functions
+ */
 
-/**
- * @param menu the array of menu items passed in to be initialized
- **/
-void init_menu(struct menu_item * menu)
+
+/*
+ * simply draws the main menu, usually called after clearScreen()
+ */
+void drawMenu(void)
 {
-    int loopCounter;
-
-    BOOLEAN (*menuFunctions[NUM_MENU_ITEMS])(struct checker_system*) = 
-    {
-        spell_check,
-        add_word,
-        del_word,
-        stats_report,
-        clear_stats,
-        save_and_exit,
-        quit
-    };
-    char * menuText[NUM_MENU_ITEMS] = 
-    {
-        "(1) Spell check a file",
-        "(2) Add a new word to the dictionary",
-        "(3) Delete a word from the dictionary",
-        "(4) Display word stats",
-        "(5) Clear word stats",
-        "(6) Save dictionary and exit",
-        "(7) Quit without saving"
-    };
-    memset(menu, 0, sizeof(struct menu_item) * NUM_MENU_ITEMS);
-
-    for(loopCounter = 0; loopCounter < NUM_MENU_ITEMS; loopCounter++)
-    {
-        menu[loopCounter].checker_func = menuFunctions[loopCounter];
-        strcpy(menu[loopCounter].text, menuText[loopCounter]);
-    }
+    /*print the menu*/
+    printf("Welcome to tick-tack-toe\n");
+    printf("------------------------\n");
+    printf("1. Play Game\n");
+    printf("2. Display High Scores\n");
+    printf("3. Quit Game\n");
+    printf("------------------------\n");
 }
 
-/**
- * @param menu the menu array to display the contents of 
- **/
-void display_menu(struct menu_item * menu)
+/*
+ * this handles the input from the main menu
+ * uses fgets and strtol and returns the menu selection as an int 
+ */
+int handleMenuInput(void)
 {
+    enum input_result menuSuccess = FAILURE;
+    char menuInput[MI_LENGTH + I_EXTRA];
+    int menuInputAsInt = 0;
+    char *end;
+
+    printf("Enter your menu selection(1-3):");
+
+    while(!menuSuccess)
+    {
+            if(fgets(menuInput, MI_LENGTH+I_EXTRA, stdin) == NULL)
+            {
+                /*
+                 * catches ctrl+d (i think)
+                 * set input as quit (3rd option)
+                 * and break out of the loop
+                 */
+                 
+                menuInputAsInt = 3;
+                menuSuccess = TRUE;
+                continue;
+            }
+
+            /*
+             * check for overflow
+             */
+            if(checkForOverflow(menuInput, strlen(menuInput)))
+            {
+                clearScreen();
+                drawMenu();
+                printf("ERROR:\nPlease enter only one number:");
+                menuSuccess = FAILURE;
+                continue;
+            }
+
+            /*string to number conversion here*/
+            menuInputAsInt = (int) strtol(menuInput,  &end, 10);
+            
+            /* 
+             * make sure it was actually a number
+             * no need to worry about the length
+             * as it was forced into 1 char earlier
+             */
+            if(menuInput == end || *end != 0)
+            {
+                clearScreen();
+                drawMenu();
+                printf("ERROR:\nPlease enter a number:");
+                menuSuccess = FAILURE;
+                continue;
+            }
+
+            /*
+             * make sure its within bounds
+             */
+            if(menuInputAsInt > 3 || menuInputAsInt < 1)
+            {
+                clearScreen();
+                drawMenu();
+                printf("ERROR:\nPlease enter a number between 1-3:");
+                menuSuccess = FAILURE;
+                continue;
+            }
+
+            menuSuccess = SUCCESS;
+    }
+
+    /*
+    * menuInputAsInt will be 1-3 we need 0-2 returned
+    * so return menuInputAsInt-1
+    */    
+    return (menuInputAsInt - 1);
 }
